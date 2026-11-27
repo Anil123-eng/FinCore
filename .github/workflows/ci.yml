@@ -54,4 +54,5 @@ jobs:
           python -c "import sys; sys.path.insert(0, '.'); from src.calculations import calculate_interest, validate_transaction; print('Python imports OK')"
 
       - name: Docker Compose Validate
+        working-directory: infrastructure/docker
         run: docker compose config
