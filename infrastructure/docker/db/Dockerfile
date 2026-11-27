@@ -1,0 +1,7 @@
+FROM postgres:15-alpine
+ENV POSTGRES_DB=fincore
+ENV POSTGRES_USER=fincore
+ENV POSTGRES_PASSWORD=password
+ENV POSTGRES_INITDB_DOCKETERS=0
+WORKDIR /docker-entrypoint-initdb.d
+EXPOSE 5432

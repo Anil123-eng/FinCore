@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "fincore-analytics"
+version = "1.0.0"
+description = "FinCore Python analytics service"
+requires-python = ">=3.11"
+
+[project.dependencies]
+fastapi = "*"
+uvicorn = "*"
+pydantic = "*"
+python-dotenv = "*"
