@@ -1,61 +1,77 @@
-import Image from "next/image";
+﻿"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
+import { useAuth } from "@/lib/auth";
+import { api } from "@/lib/api";
+
+type Dispute = { id: number; transaction_id: string; reason: string; status: string };
 
 export default function Disputes() {
+  const { token, ready, user } = useAuth();
+  const router = useRouter();
+  const [items, setItems] = useState<Dispute[]>([]);
+  const [transactionId, setTransactionId] = useState("");
+  const [reason, setReason] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (ready && !user) router.replace("/login");
+  }, [ready, user, router]);
+
+  if (!ready || !user) return <div className="min-h-screen flex items-center justify-center text-zinc-400">Loading…</div>;
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    setErr(null);
+    try {
+      const r = await api<{ dispute: Dispute }>("/api/disputes", {
+        method: "POST",
+        token: token!,
+        body: JSON.stringify({ transactionId, reason }),
+      });
+      setItems((prev) => [r.dispute, ...prev]);
+      setTransactionId("");
+      setReason("");
+    } catch (e) {
+      setErr((e as Error).message);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <Image
-        src="/next.svg"
-        alt="FinCore logo"
-        className="h-16 w-auto mx-auto dark:invert mb-8"
-        width={48}
-        height={28}
-        priority
-      />
+    <div className="p-6 sm:p-10 max-w-3xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-zinc-800">Disputes</h1>
+        <p className="text-sm text-zinc-500">Raise and track disputes for simulated transactions.</p>
+      </div>
 
-      <div className="flex flex-col items-center justify-center py-12 px-4 sm:px-6">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">
-          Disputes
-        </h1>
-
-        <p className="text-zinc-600 dark:text-zinc-400 mb-8 text-center max-w-2xl">
-          Raise a dispute on a simulated transaction. All dispute cases are illustrative only.
-        </p>
-
-        <div className="w-full max-w-2xl bg-white rounded-xl shadow-sm dark:bg-zinc-800 border border-zinc-300/50 mb-8">
-          <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-700/50">
-            <h2 className="text-lg font-medium text-zinc-800 dark:text-zinc-100">
-              Raise Dispute
-            </h2>
-          </div>
-          <div className="p-4 space-y-4">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 space-y-2">
-              <span className="font-medium">Transaction ID:</span>
-              <span>TXN-20261127-003</span>
-            </p>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              <span className="font-medium">Dispute Type:</span>
-              <span>Unauthorized transfer</span>
-            </p>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              <span className="font-medium">Date Filed:</span>
-              <span>2026-11-27</span>
-            </p>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              <span className="font-medium">Status:</span>
-              <span>Under review</span>
-            </p>
-          </div>
+      <form onSubmit={submit} className="rounded-2xl border border-pink-100 bg-pink-50 p-6 space-y-4 shadow-sm mb-6">
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 mb-1">Transaction ID</label>
+          <input value={transactionId} onChange={(e) => setTransactionId(e.target.value)} required className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800" placeholder="e.g. 1" />
         </div>
-
-        <div className="w-full max-w-2xl text-center">
-          <a href="/"
-            className="inline-block px-6 py-3 rounded-md bg-zinc-600 text-white font-medium text-sm hover:bg-zinc-500 transition-colors">
-            Return to Dashboard
-          </a>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            Dispute case submitted for review.
-          </p>
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 mb-1">Reason</label>
+          <textarea value={reason} onChange={(e) => setReason(e.target.value)} required className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800" rows={3} placeholder="Describe the issue" />
         </div>
+        {err && <p className="text-sm text-rose-500">{err}</p>}
+        <button type="submit" className="rounded-lg bg-pink-200 text-zinc-800 px-4 py-2 text-sm font-medium hover:bg-pink-300 transition-colors">Submit dispute</button>
+      </form>
+
+      <div className="rounded-2xl border border-zinc-200/70 bg-white/80 shadow-sm">
+        {items.length === 0 ? (
+          <p className="p-4 text-sm text-zinc-400">No disputes raised in this session.</p>
+        ) : (
+          <div className="divide-y divide-zinc-100">
+            {items.map((d) => (
+              <div key={d.id} className="p-4">
+                <p className="text-sm font-medium text-zinc-700">Dispute #{d.id} · Txn {d.transaction_id}</p>
+                <p className="text-sm text-zinc-500">{d.reason}</p>
+                <p className="text-xs text-amber-600 mt-1">{d.status}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

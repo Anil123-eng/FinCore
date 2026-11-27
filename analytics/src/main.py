@@ -1,5 +1,10 @@
 from fastapi import FastAPI, HTTPException
-from src.calculations import calculate_interest, validate_transaction
+from src.calculations import (
+    calculate_interest,
+    validate_transaction,
+    InterestCalculation,
+    TransactionValidation,
+)
 from pydantic import BaseModel, Field
 from typing import Optional
 import os

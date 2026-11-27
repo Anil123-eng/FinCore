@@ -46,11 +46,16 @@ CREATE OR REPLACE FUNCTION update_account_balance()
 RETURNS TRIGGER AS $$
 BEGIN
     IF NEW.entry_type = 'debit' THEN
-        NEW.balance = NEW.balance - NEW.amount;
+        UPDATE accounts
+        SET balance = balance - NEW.amount, updated_at = CURRENT_TIMESTAMP
+        WHERE id = NEW.account_id;
     ELSE
-        NEW.balance = NEW.balance + NEW.amount;
+        UPDATE accounts
+        SET balance = balance + NEW.amount, updated_at = CURRENT_TIMESTAMP
+        WHERE id = NEW.account_id;
     END IF;
     RETURN NEW;
+END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER update_balance_trigger

@@ -8,43 +8,50 @@ on:
 
 jobs:
   build-test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
+      - uses: actions/checkout@v4
+
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          
+
       - name: Install Python Dependencies
         working-directory: analytics
-        run: python -m pip install --upgrade pip && pip install -r requirements.txt
-        
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
-          
+
       - name: Install Frontend Dependencies
         working-directory: frontend
         run: npm ci
-        
+
       - name: Run Frontend Build
         working-directory: frontend
-        run: next build
-        
-      - name: Run Backend TypeScript Check
-        working-directory: backend
-        run: tsc
-        
-      - name: Run Python Tests
-        working-directory: analytics
-        run: python -c "import sys; sys.path.insert(0, r'.'); from src.calculations import calculate_interest, validate_transaction; print('Python OK')"
-        
-      - name: Lint Check
+        run: npm run build
+
+      - name: Run Frontend Lint
         working-directory: frontend
         run: npm run lint
-        
+
+      - name: Install Backend Dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run Backend Build
+        working-directory: backend
+        run: npm run build
+
+      - name: Run Python Validation
+        working-directory: analytics
+        run: |
+          python -c "import sys; sys.path.insert(0, '.'); from src.calculations import calculate_interest, validate_transaction; print('Python imports OK')"
+
       - name: Docker Compose Validate
         run: docker compose config

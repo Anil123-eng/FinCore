@@ -1,61 +1,96 @@
-import Image from "next/image";
+﻿"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
+import { useAuth } from "@/lib/auth";
+import { api } from "@/lib/api";
+
+type Beneficiary = { id: number; name: string; account: string };
 
 export default function Beneficiaries() {
+  const { token, ready, user } = useAuth();
+  const router = useRouter();
+  const [items, setItems] = useState<Beneficiary[]>([]);
+  const [name, setName] = useState("");
+  const [account, setAccount] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (ready && !user) router.replace("/login");
+  }, [ready, user, router]);
+
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+    api<{ beneficiaries: Beneficiary[] }>("/api/beneficiaries", { token })
+      .then((d) => active && setItems(d.beneficiaries))
+      .catch(() => {})
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [token]);
+
+  if (!ready || !user) return <div className="min-h-screen flex items-center justify-center text-zinc-400">Loading…</div>;
+
+  const add = async (e: FormEvent) => {
+    e.preventDefault();
+    setErr(null);
+    try {
+      const r = await api<{ beneficiary: Beneficiary }>("/api/beneficiaries", {
+        method: "POST",
+        token: token!,
+        body: JSON.stringify({ name, account }),
+      });
+      setItems((prev) => [...prev, r.beneficiary]);
+      setName("");
+      setAccount("");
+    } catch (e) {
+      setErr((e as Error).message);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <Image
-        src="/next.svg"
-        alt="FinCore logo"
-        className="h-16 w-auto mx-auto dark:invert mb-8"
-        width={48}
-        height={28}
-        priority
-      />
+    <div className="p-6 sm:p-10 max-w-3xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-zinc-800">Beneficiaries</h1>
+        <p className="text-sm text-zinc-500">Manage the accounts you transact with.</p>
+      </div>
 
-      <div className="flex flex-col items-center justify-center py-12 px-4 sm:px-6">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">
-          Beneficiaries
-        </h1>
-
-        <p className="text-zinc-600 dark:text-zinc-400 mb-8 text-center max-w-2xl">
-          Manage beneficiary accounts for transfers and payments. No real customer information
-          or banking credentials are used.
-        </p>
-
-        <div className="w-full max-w-2xl bg-white rounded-xl shadow-sm dark:bg-zinc-800 border border-zinc-300/50 mb-8">
-          <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-700/50">
-            <h2 className="text-lg font-medium text-zinc-800 dark:text-zinc-100">
-              Beneficiary List
-            </h2>
+      <form onSubmit={add} className="rounded-2xl border border-sky-100 bg-sky-50 p-6 space-y-4 shadow-sm mb-6">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-1">Name</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} required className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800" placeholder="Beneficiary name" />
           </div>
-          <div className="p-4 space-y-4 text-sm">
-            <p className="text-zinc-400 dark:text-zinc-400">
-              No beneficiaries added yet
-            </p>
-            <p className="text-zinc-400 dark:text-zinc-400">
-              <a href="/"
-                className="underline text-zinc-500 dark:text-zinc-400 cursor-pointer">
-                Return to Dashboard
-              </a>
-            </p>
-            <p className="text-zinc-400 dark:text-zinc-400">
-              <a href="/wallets"
-                className="underline text-zinc-500 dark:text-zinc-400 cursor-pointer">
-                Add wallets first
-              </a>
-            </p>
+          <div>
+            <label className="block text-sm font-medium text-zinc-700 mb-1">Account</label>
+            <input value={account} onChange={(e) => setAccount(e.target.value)} required className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-800" placeholder="ACC-001" />
           </div>
         </div>
+        {err && <p className="text-sm text-rose-500">{err}</p>}
+        <button type="submit" className="rounded-lg bg-sky-200 text-zinc-800 px-4 py-2 text-sm font-medium hover:bg-sky-300 transition-colors">Add beneficiary</button>
+      </form>
 
-        <div className="w-full max-w-2xl text-center">
-          <a href="/"
-            className="inline-block px-6 py-3 rounded-md bg-zinc-600 text-white font-medium text-sm hover:bg-zinc-500 transition-colors">
-            Return to Dashboard
-          </a>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            Manage beneficiary accounts for transfers and payments.
-          </p>
-        </div>
+      <div className="rounded-2xl border border-zinc-200/70 bg-white/80 shadow-sm">
+        {loading ? (
+          <p className="p-4 text-sm text-zinc-400">Loading…</p>
+        ) : items.length === 0 ? (
+          <p className="p-4 text-sm text-zinc-400">No beneficiaries added yet.</p>
+        ) : (
+          <div className="divide-y divide-zinc-100">
+            {items.map((b) => (
+              <div key={b.id} className="p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-zinc-700">{b.name}</p>
+                  <p className="text-xs text-zinc-400">{b.account}</p>
+                </div>
+                <span className="text-xs text-zinc-400">#{b.id}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

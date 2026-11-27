@@ -1,62 +1,36 @@
-import Image from "next/image";
+﻿import Link from "next/link";
+
+const CARDS = [
+  { label: "Suspicious Activity", value: "None detected", bg: "bg-yellow-50", border: "border-yellow-100" },
+  { label: "Recent Transfers Reviewed", value: "0 this period", bg: "bg-sky-50", border: "border-sky-100" },
+  { label: "Dispute Cases Open", value: "0", bg: "bg-pink-50", border: "border-pink-100" },
+  { label: "Reconciliation Status", value: "Balanced", bg: "bg-emerald-50", border: "border-emerald-100" },
+];
 
 export default function Operations() {
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-black">
-      <Image
-        src="/next.svg"
-        alt="FinCore logo"
-        className="h-16 w-auto mx-auto dark:invert mb-8"
-        width={48}
-        height={28}
-        priority
-      />
-
-      <div className="flex flex-col items-center justify-center py-12 px-4 sm:px-6">
-        <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white mb-6">
-          Operations
-        </h1>
-
-        <p className="text-zinc-600 dark:text-zinc-400 mb-8 text-center max-w-2xl">
-          Operations interface for investigating suspicious activity and reconciling
+    <div className="p-6 sm:p-10 max-w-4xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold text-zinc-800">Operations</h1>
+        <p className="text-sm text-zinc-500">
+          Operations view for investigating suspicious activity and reconciling
           payment-provider events. Simulated only.
         </p>
+      </div>
 
-        <div className="w-full max-w-2xl bg-white rounded-xl shadow-sm dark:bg-zinc-800 border border-zinc-300/50 mb-8">
-          <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-700/50">
-            <h2 className="text-lg font-medium text-zinc-800 dark:text-zinc-100">
-              Activity Investigation
-            </h2>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {CARDS.map((c) => (
+          <div key={c.label} className={`rounded-2xl border ${c.border} ${c.bg} p-5 shadow-sm`}>
+            <p className="text-sm text-zinc-500">{c.label}</p>
+            <p className="text-xl font-semibold text-zinc-800 mt-1">{c.value}</p>
           </div>
-          <div className="p-4 space-y-4">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 space-y-2">
-              <span className="font-medium">Suspicious Activity:</span>
-              <span>None detected</span>
-            </p>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 space-y-1">
-              <span className="font-medium">Recent Transfers Reviewed:</span>
-              <span>3 this period</span>
-            </p>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 space-y-1">
-              <span className="font-medium">Dispute Cases Open:</span>
-              <span>1</span>
-            </p>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 space-y-1">
-              <span className="font-medium">Reconciliation Status:</span>
-              <span>Balanced</span>
-            </p>
-          </div>
-        </div>
+        ))}
+      </div>
 
-        <div className="w-full max-w-2xl text-center">
-          <a href="/"
-            className="inline-block px-6 py-3 rounded-md bg-zinc-600 text-white font-medium text-sm hover:bg-zinc-500 transition-colors">
-            Return to Dashboard
-          </a>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            Operations interface for investigating suspicious activity.
-          </p>
-        </div>
+      <div className="mt-8">
+        <Link href="/dashboard" className="inline-block px-6 py-3 rounded-lg bg-indigo-200 text-zinc-800 font-medium text-sm hover:bg-indigo-300 transition-colors">
+          Return to Dashboard
+        </Link>
       </div>
     </div>
   );
