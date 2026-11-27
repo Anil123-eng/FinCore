@@ -1,4 +1,4 @@
-name: FinCore CI/CD
+﻿name: FinCore CI/CD
 
 on:
   push:
@@ -48,9 +48,3 @@ jobs:
         
       - name: Docker Compose Validate
         run: docker compose config
-'''
-</think>
-<tool_call>
-<function=run_commands>
-<parameter=commands>
-["cmd /c type NUL > D:\FinCore\.github\workflows\ci.yml"
